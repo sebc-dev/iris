@@ -424,23 +424,23 @@ Claude Opus 4.6 (1M context)
 
 ### Debug Log References
 
-- shadcn-svelte CLI interactive — contourné en créant `components.json` manuellement
-- Ancien dossier `iris/` (React+Tauri) renommé en `iris-old/` avant initialisation
-- Polices téléchargées depuis Google Fonts (Inter) et GitHub releases (JetBrains Mono v2.304)
+- prettier-plugin-tailwindcss pointait vers `layout.css` (ancien chemin de sv create) — corrigé dans `.prettierrc` vers `src/app.css`
+- shadcn-svelte CLI interactive — contourné en créant `components.json` manuellement + utilitaire `cn`
+- Polices téléchargées depuis Google Fonts (Inter latin 48KB, JetBrains Mono latin 31KB)
 
 ### Completion Notes List
 
-- Projet SvelteKit initialisé via `npx sv create iris` (Svelte 5.51+, SvelteKit 2.50+)
+- Projet SvelteKit créé via `npx sv create iris` (Svelte 5.51+, SvelteKit 2.50+, Vitest 4.1+)
 - TypeScript strict activé par défaut
-- adapter-static configuré avec fallback SPA, SSR désactivé
-- Tailwind CSS v4 via plugin Vite natif (pas de PostCSS, pas de tailwind.config)
+- adapter-static configuré avec fallback SPA, SSR et prerender désactivés
+- Tailwind CSS v4.1.18 via plugin Vite natif (`@tailwindcss/vite`), pas de PostCSS
 - Tauri v2 initialisé avec Isolation Pattern et CSP configuré
-- shadcn-svelte configuré manuellement (components.json + utilitaire cn)
-- 20 dossiers créés conformément à l'architecture (AC2)
+- shadcn-svelte configuré manuellement (components.json + utilitaire cn avec clsx + tailwind-merge)
+- 20 dossiers créés conformément à l'architecture (AC2) avec `.gitkeep`
 - 4 routes placeholder (login, importer, explorer, comparer)
-- Tokens design IRIS intégrés dans app.css (@theme)
-- Polices Inter et JetBrains Mono intégrées (woff2)
-- Vitest configuré avec 1 test placeholder qui passe
+- Tokens design IRIS intégrés dans app.css (@theme) : palette, sémantique, comparaison, typo, espacement
+- Polices Inter et JetBrains Mono intégrées (woff2 latin)
+- Vitest configuré avec test placeholder (MAX_LINE_LENGTH = 204)
 - CLAUDE.md créé avec guidelines de développement
 - Toutes les validations passent : dev, build, test, lint, check
 
@@ -450,7 +450,6 @@ Claude Opus 4.6 (1M context)
 - `iris/package.json`
 - `iris/svelte.config.js`
 - `iris/vite.config.ts`
-- `iris/vitest.config.ts`
 - `iris/tsconfig.json`
 - `iris/eslint.config.js`
 - `iris/.prettierrc`
@@ -497,4 +496,4 @@ Claude Opus 4.6 (1M context)
 
 ### Change Log
 
-- 2026-03-22 : Implémentation complète Story 1.1 — Initialisation du projet IRIS avec SvelteKit + Tauri v2 + shadcn-svelte + Tailwind CSS v4
+- 2026-03-22 : Réimplémentation complète Story 1.1 — Initialisation du projet IRIS avec SvelteKit + Tauri v2 + shadcn-svelte + Tailwind CSS v4
