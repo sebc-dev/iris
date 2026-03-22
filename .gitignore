@@ -1,0 +1,34 @@
+# Node
+node_modules/
+
+# Build outputs
+iris/.output
+iris/.vercel
+iris/.netlify
+iris/.wrangler
+iris/.svelte-kit
+iris/build
+
+# Tauri
+iris/src-tauri/target/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# IDE
+.vscode/
+.idea/
+
+# Old project backup
+iris-old/
