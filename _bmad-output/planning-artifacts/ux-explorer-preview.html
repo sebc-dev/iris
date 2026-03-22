@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRIS — Explorer Preview Interactif</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg-primary: #FAFAFA;
+    --bg-secondary: #F4F4F5;
+    --bg-tertiary: #E4E4E7;
+    --text-primary: #18181B;
+    --text-secondary: #71717A;
+    --text-muted: #A1A1AA;
+    --border: #E4E4E7;
+    --accent: #3B82F6;
+    --accent-light: #DBEAFE;
+    --accent-dark: #2563EB;
+    --valid: #22C55E;
+    --valid-bg: #DCFCE7;
+    --intermediate: #F59E0B;
+    --intermediate-bg: #FEF3C7;
+    --invalid: #EF4444;
+    --invalid-bg: #FEE2E2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ===== APP LAYOUT ===== */
+  .app { display: flex; flex: 1; min-height: 0; }
+
+  /* ===== SIDEBAR L1 ===== */
+  .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 8px 0; gap: 2px; flex-shrink: 0;
+  }
+  .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 15px; cursor: pointer;
+    transition: all 0.15s; position: relative;
+  }
+  .sidebar-l1 .icon:hover { background: #27272A; color: #E4E4E7; }
+  .sidebar-l1 .icon.active { background: var(--accent); color: #fff; }
+  .sidebar-l1 .icon .tooltip {
+    display: none; position: absolute; left: 48px; background: #18181B; color: #fff;
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; z-index: 100;
+    pointer-events: none;
+  }
+  .sidebar-l1 .icon:hover .tooltip { display: block; }
+  .sidebar-l1 .spacer { flex: 1; }
+
+  /* ===== SIDEBAR L2 ===== */
+  .sidebar-l2 {
+    width: 260px; background: var(--bg-secondary); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; min-height: 0;
+  }
+  .sidebar-l2-header {
+    padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sidebar-l2-search {
+    margin: 8px 10px; padding: 6px 10px 6px 28px; border-radius: 6px; border: 1px solid var(--border);
+    font-size: 12px; background: var(--bg-primary); color: var(--text-primary); outline: none;
+    transition: border-color 0.15s; position: relative;
+  }
+  .sidebar-l2-search:focus { border-color: var(--accent); }
+  .search-wrapper { position: relative; margin: 8px 10px; }
+  .search-wrapper::before {
+    content: "🔍"; position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 11px; pointer-events: none;
+  }
+  .search-wrapper input {
+    width: 100%; padding: 6px 10px 6px 28px; border-radius: 6px; border: 1px solid var(--border);
+    font-size: 12px; background: var(--bg-primary); color: var(--text-primary); outline: none;
+  }
+  .search-wrapper input:focus { border-color: var(--accent); }
+
+  .tree-container { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .tree-item {
+    padding: 5px 10px; font-size: 12px; color: var(--text-primary); cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: background 0.1s;
+    border-left: 2px solid transparent; user-select: none;
+  }
+  .tree-item:hover { background: var(--bg-tertiary); }
+  .tree-item.selected { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+  .tree-item .indent { width: 14px; flex-shrink: 0; }
+  .tree-icon { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; }
+  .tree-toggle { font-size: 10px; width: 14px; text-align: center; color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
+  .tree-badge {
+    margin-left: auto; font-size: 10px; background: var(--bg-tertiary); color: var(--text-secondary);
+    padding: 0px 5px; border-radius: 8px; font-weight: 500; flex-shrink: 0;
+  }
+  .tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ===== MAIN AREA ===== */
+  .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+  /* ===== TOOLBAR ===== */
+  .toolbar {
+    height: 40px; background: var(--bg-primary); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 8px; flex-shrink: 0;
+  }
+  .breadcrumb { font-size: 12px; color: var(--text-secondary); display: flex; gap: 2px; align-items: center; }
+  .breadcrumb .bc-item { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.1s; }
+  .breadcrumb .bc-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .breadcrumb .bc-item.current { color: var(--text-primary); font-weight: 500; }
+  .breadcrumb .sep { color: var(--text-muted); font-size: 10px; margin: 0 2px; }
+  .toolbar-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .btn {
+    font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-primary); color: var(--text-secondary); cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; gap: 4px; font-family: 'Inter', sans-serif;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent-dark); }
+
+  /* ===== CONTENT VIEWS ===== */
+  .content-area { flex: 1; min-height: 0; overflow: hidden; }
+  .view { display: none; height: 100%; }
+  .view.active { display: flex; flex-direction: column; }
+
+  /* ===== FICHE SYNTHÉTIQUE (shared) ===== */
+  .fiche { padding: 24px; overflow-y: auto; flex: 1; }
+  .fiche-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+  .fiche-avatar {
+    width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; font-size: 20px; font-weight: 600; flex-shrink: 0;
+  }
+  .fiche-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+  .fiche-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .fiche-meta { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    padding: 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-primary);
+    cursor: default;
+  }
+  .stat-card.clickable { cursor: pointer; transition: all 0.15s; }
+  .stat-card.clickable:hover { border-color: var(--accent); background: var(--accent-light); }
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+  .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .stat-card.ok { border-left: 3px solid var(--valid); }
+  .stat-card.ko { border-left: 3px solid var(--invalid); }
+  .stat-card.info { border-left: 3px solid var(--accent); }
+  .stat-card.purple { border-left: 3px solid #8B5CF6; }
+
+  .section-title {
+    font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px;
+    text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .count { font-weight: 400; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
+
+  /* List items in fiches */
+  .fiche-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .fiche-list-item {
+    padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px;
+    display: flex; align-items: center; gap: 14px; cursor: pointer;
+    transition: all 0.15s; background: var(--bg-primary);
+  }
+  .fiche-list-item:hover { border-color: var(--accent); background: var(--accent-light); }
+  .fiche-list-icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 16px; flex-shrink: 0;
+  }
+  .fiche-list-content { flex: 1; min-width: 0; }
+  .fiche-list-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+  .fiche-list-detail { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .fiche-list-arrow { color: var(--text-muted); font-size: 14px; }
+  .fiche-list-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+  .type-badge {
+    display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px;
+    font-size: 11px; font-weight: 500; font-family: 'JetBrains Mono', monospace; gap: 4px;
+  }
+  .type-00 { background: #DBEAFE; color: #1D4ED8; }
+  .type-01 { background: #D1FAE5; color: #059669; }
+  .type-02 { background: #D1FAE5; color: #059669; }
+  .type-05 { background: #FEF3C7; color: #D97706; }
+  .type-19 { background: #FFE4E6; color: #E11D48; }
+  .type-20 { background: #FEF3C7; color: #D97706; }
+  .type-22 { background: #FCE7F3; color: #DB2777; }
+  .type-40 { background: #EDE9FE; color: #7C3AED; }
+  .type-41 { background: #EDE9FE; color: #7C3AED; }
+  .type-42 { background: #EDE9FE; color: #7C3AED; }
+  .type-60 { background: #FFEDD5; color: #EA580C; }
+  .type-80 { background: #E0E7FF; color: #4338CA; }
+  .type-90 { background: #F1F5F9; color: #475569; }
+
+  /* Bande GEST decoded fields */
+  .bande-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .bande-field {
+    padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-primary);
+  }
+  .bande-field-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+  .bande-field-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .bande-field-decoded { font-size: 11px; color: var(--accent); margin-top: 2px; }
+
+  /* ===== THREE PANELS VIEW ===== */
+  .three-panels { display: flex; flex-direction: column; height: 100%; }
+
+  .panel { min-height: 0; overflow: auto; }
+  .panel-header {
+    padding: 6px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted);
+    background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.3px;
+    position: sticky; top: 0; z-index: 2; flex-shrink: 0;
+  }
+  .panel-header .panel-info { margin-left: auto; font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+  .resizer {
+    height: 4px; background: var(--border); cursor: row-resize; flex-shrink: 0;
+    transition: background 0.15s; position: relative;
+  }
+  .resizer:hover { background: var(--accent); }
+  .resizer::after {
+    content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 30px; height: 2px; background: var(--text-muted); border-radius: 1px; opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .resizer:hover::after { opacity: 1; }
+
+  /* Panel 1: Detail */
+  .panel-detail { flex: 3; padding: 14px 16px; overflow-y: auto; }
+  .detail-header {
+    font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .field-item {
+    display: flex; flex-direction: column; gap: 2px; padding: 8px 10px;
+    border-radius: 6px; border: 1px solid transparent; transition: all 0.15s;
+  }
+  .field-item:hover { background: var(--bg-secondary); border-color: var(--border); }
+  .field-label {
+    font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .field-pos { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted); }
+  .field-value { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .field-decoded { font-size: 11px; color: var(--accent); }
+
+  /* Panel 3: Raw */
+  /* Panel 2: Raw */
+  .panel-raw {
+    flex: 1; background: #18181B; padding: 10px 14px; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8;
+    min-height: 100px;
+  }
+  .raw-line { display: flex; gap: 10px; white-space: nowrap; }
+  .raw-linenum { color: #52525B; min-width: 32px; text-align: right; user-select: none; }
+  .raw-content { display: flex; }
+  .raw-seg {
+    padding: 2px 1px; transition: all 0.15s; cursor: pointer; position: relative;
+  }
+  .raw-seg:hover { outline: 1px solid var(--accent); outline-offset: -1px; border-radius: 2px; }
+  .raw-seg.highlighted { outline: 2px solid #F59E0B; outline-offset: -1px; border-radius: 2px; }
+
+  /* ===== TRANSITION ===== */
+  .fade-in { animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar L1 -->
+  <div class="sidebar-l1">
+    <div class="icon"><span class="tooltip">Importer</span>📥</div>
+    <div class="icon active"><span class="tooltip">Explorer</span>🔍</div>
+    <div class="icon"><span class="tooltip">Comparer</span>⚖️</div>
+    <div class="spacer"></div>
+    <div class="icon"><span class="tooltip">Paramètres</span>⚙️</div>
+  </div>
+
+  <!-- Sidebar L2 -->
+  <div class="sidebar-l2">
+    <div class="sidebar-l2-header">Explorateur</div>
+    <div class="search-wrapper">
+      <input placeholder="Rechercher… (Ctrl+K)" />
+    </div>
+    <div class="tree-container" id="tree">
+      <!-- Tree items are generated by JS -->
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main-area">
+    <div class="toolbar">
+      <div class="breadcrumb" id="breadcrumb"></div>
+      <div class="toolbar-actions">
+        <button class="btn" id="btn-edit" onclick="toggleEdit()">✏️ Édition</button>
+        <button class="btn">📤 Exporter</button>
+      </div>
+    </div>
+    <div class="content-area">
+      <!-- Vue Fichier -->
+      <div class="view" id="view-fichier">
+        <div class="fiche fade-in">
+          <div class="fiche-header">
+            <div class="fiche-avatar" style="background:#DBEAFE;color:#1D4ED8;">📄</div>
+            <div>
+              <div class="fiche-title">DADS_2024_M12.gest</div>
+              <div class="fiche-subtitle">Bande GEST — Décembre 2024</div>
+            </div>
+          </div>
+
+          <div class="section-title">En-tête de bande décodé</div>
+          <div class="bande-fields">
+            <div class="bande-field">
+              <div class="bande-field-label">Code correspondance</div>
+              <div class="bande-field-value">001</div>
+            </div>
+            <div class="bande-field">
+              <div class="bande-field-label">Date de paye</div>
+              <div class="bande-field-value">012024</div>
+              <div class="bande-field-decoded">Janvier 2024</div>
+            </div>
+            <div class="bande-field">
+              <div class="bande-field-label">Chaîne de paye</div>
+              <div class="bande-field-value">01</div>
+              <div class="bande-field-decoded">Chaîne principale</div>
+            </div>
+            <div class="bande-field">
+              <div class="bande-field-label">Ministère</div>
+              <div class="bande-field-value">130</div>
+              <div class="bande-field-decoded">Éducation nationale</div>
+            </div>
+            <div class="bande-field">
+              <div class="bande-field-label">Administration</div>
+              <div class="bande-field-value">001</div>
+            </div>
+            <div class="bande-field">
+              <div class="bande-field-label">Département</div>
+              <div class="bande-field-value">075</div>
+              <div class="bande-field-decoded">Paris</div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-card ok"><div class="stat-value">1 984</div><div class="stat-label">Lignes valides</div></div>
+            <div class="stat-card ko"><div class="stat-value">3</div><div class="stat-label">Lignes en erreur</div></div>
+            <div class="stat-card info"><div class="stat-value">18</div><div class="stat-label">Types de cartes</div></div>
+            <div class="stat-card purple"><div class="stat-value">847</div><div class="stat-label">Individus</div></div>
+          </div>
+
+          <div class="section-title">Individus <span class="count">(847)</span></div>
+          <div class="fiche-list" id="fichier-individus-list"></div>
+        </div>
+      </div>
+
+      <!-- Vue Individu -->
+      <div class="view" id="view-individu">
+        <div class="fiche fade-in">
+          <div class="fiche-header" id="individu-header"></div>
+          <div class="stats-row" id="individu-stats"></div>
+          <div class="section-title">Dossiers de paie <span class="count" id="individu-dossiers-count"></span></div>
+          <div class="fiche-list" id="individu-dossiers-list"></div>
+        </div>
+      </div>
+
+      <!-- Vue Dossier -->
+      <div class="view" id="view-dossier">
+        <div class="fiche fade-in">
+          <div class="fiche-header" id="dossier-header"></div>
+          <div class="stats-row" id="dossier-stats"></div>
+          <div class="section-title">Cartes <span class="count" id="dossier-cartes-count"></span></div>
+          <div class="fiche-list" id="dossier-cartes-list"></div>
+        </div>
+      </div>
+
+      <!-- Vue Carte (3 panneaux) -->
+      <div class="view" id="view-carte">
+        <div class="three-panels">
+          <div class="panel panel-detail" id="carte-detail"></div>
+          <div class="resizer"></div>
+          <div class="panel panel-raw" id="carte-raw"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA MODEL =====
+const data = {
+  fichier: {
+    name: "DADS_2024_M12.gest",
+    gcorr: "001", datePaye: "012024", chaine: "01", ministere: "130", admin: "001", dept: "075",
+    linesOk: 1984, linesKo: 3, typesCount: 18
+  },
+  individus: [
+    {
+      name: "Dupont Marie", insee: "2750175001234", icon: "DM", color: "#DBEAFE",
+      dossiers: [
+        {
+          nudos: "01", label: "Dossier 01",
+          cartes: [
+            { type: "01", label: "État civil", line: 45, fields: [
+              { name: "Date d'effet", pos: "42-49", value: "01012024", decoded: "01/01/2024" },
+              { name: "Nom d'usage", pos: "50-79", value: "DUPONT", decoded: null },
+              { name: "Prénom", pos: "80-109", value: "MARIE", decoded: null },
+              { name: "Date naissance", pos: "110-117", value: "15011975", decoded: "15/01/1975" },
+              { name: "Sexe", pos: "118-118", value: "2", decoded: "Féminin" },
+              { name: "Situation fam.", pos: "119-119", value: "M", decoded: "Marié(e)" }
+            ], raw: "00101202401011300010752750175001234010101012024DUPONT                        MARIE                         15011975 2M" },
+            { type: "05", label: "Indemnités", line: 46, fields: [
+              { name: "Code opération", pos: "42-42", value: "1", decoded: "Paiement" },
+              { name: "Code indemnité", pos: "43-46", value: "0412", decoded: "Traitement indiciaire" },
+              { name: "MC", pos: "47-47", value: "1", decoded: null },
+              { name: "Nb unités", pos: "48-55", value: "00015167", decoded: "151,67" },
+              { name: "Montant", pos: "56-67", value: "000002345670", decoded: "2 345,67 €" }
+            ], raw: "00101202401011300010752750175001234010510412100015167000002345670" },
+            { type: "40", label: "Coordonnées bancaires", line: 47, fields: [
+              { name: "Code banque", pos: "42-46", value: "30004", decoded: "BNP Paribas" },
+              { name: "Code guichet", pos: "47-51", value: "01234", decoded: null },
+              { name: "N° compte", pos: "52-62", value: "00012345678", decoded: null },
+              { name: "Clé RIB", pos: "63-64", value: "95", decoded: null },
+              { name: "Co suite", pos: "65-66", value: "01", decoded: null }
+            ], raw: "001012024010113000107527501750012340140300040123400012345678950100000000000000000000000000000000000000000000000000000000000000000000000000DUPONT MARIE              000001234501" },
+            { type: "22", label: "Retenues", line: 48, fields: [
+              { name: "Code indemnité", pos: "42-45", value: "0301", decoded: "CSG déductible" },
+              { name: "Numéro", pos: "46-47", value: "01", decoded: null },
+              { name: "Sens", pos: "48-48", value: "1", decoded: "Retenue" },
+              { name: "Montant", pos: "49-60", value: "000000056789", decoded: "567,89 €" }
+            ], raw: "0010120240101130001075275017500123401220301011000000056789" }
+          ]
+        },
+        {
+          nudos: "02", label: "Dossier 02",
+          cartes: [
+            { type: "01", label: "État civil", line: 49, fields: [
+              { name: "Date d'effet", pos: "42-49", value: "01012024", decoded: "01/01/2024" },
+              { name: "Nom d'usage", pos: "50-79", value: "DUPONT", decoded: null },
+              { name: "Prénom", pos: "80-109", value: "MARIE", decoded: null },
+              { name: "Date naissance", pos: "110-117", value: "15011975", decoded: "15/01/1975" },
+              { name: "Sexe", pos: "118-118", value: "2", decoded: "Féminin" },
+              { name: "Situation fam.", pos: "119-119", value: "M", decoded: "Marié(e)" }
+            ], raw: "00101202401011300010752750175001234020101012024DUPONT                        MARIE                         15011975 2M" },
+            { type: "05", label: "Indemnités", line: 50, fields: [
+              { name: "Code opération", pos: "42-42", value: "1", decoded: "Paiement" },
+              { name: "Code indemnité", pos: "43-46", value: "0301", decoded: "NBI" },
+              { name: "MC", pos: "47-47", value: "1", decoded: null },
+              { name: "Nb unités", pos: "48-55", value: "00003000", decoded: "30,00" },
+              { name: "Montant", pos: "56-67", value: "000000142050", decoded: "1 420,50 €" }
+            ], raw: "001012024010113000107527501750012340205103011000030000000001420500" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Martin Jean", insee: "1650175005432", icon: "MJ", color: "#D1FAE5",
+      dossiers: [
+        {
+          nudos: "01", label: "Dossier 01",
+          cartes: [
+            { type: "01", label: "État civil", line: 102, fields: [
+              { name: "Date d'effet", pos: "42-49", value: "01012024", decoded: "01/01/2024" },
+              { name: "Nom d'usage", pos: "50-79", value: "MARTIN", decoded: null },
+              { name: "Prénom", pos: "80-109", value: "JEAN", decoded: null },
+              { name: "Date naissance", pos: "110-117", value: "22061965", decoded: "22/06/1965" },
+              { name: "Sexe", pos: "118-118", value: "1", decoded: "Masculin" },
+              { name: "Situation fam.", pos: "119-119", value: "C", decoded: "Célibataire" }
+            ], raw: "00101202401011300010751650175005432010101012024MARTIN                        JEAN                          22061965 1C" },
+            { type: "05", label: "Indemnités", line: 103, fields: [
+              { name: "Code opération", pos: "42-42", value: "1", decoded: "Paiement" },
+              { name: "Code indemnité", pos: "43-46", value: "0412", decoded: "Traitement indiciaire" },
+              { name: "MC", pos: "47-47", value: "1", decoded: null },
+              { name: "Nb unités", pos: "48-55", value: "00015167", decoded: "151,67" },
+              { name: "Montant", pos: "56-67", value: "000003120450", decoded: "3 120,45 €" }
+            ], raw: "00101202401011300010751650175005432010510412100015167000003120450" },
+            { type: "40", label: "Coordonnées bancaires", line: 104, fields: [
+              { name: "Code banque", pos: "42-46", value: "20041", decoded: "La Banque Postale" },
+              { name: "Code guichet", pos: "47-51", value: "01009", decoded: null },
+              { name: "N° compte", pos: "52-62", value: "00098765432", decoded: null },
+              { name: "Clé RIB", pos: "63-64", value: "17", decoded: null },
+              { name: "Co suite", pos: "65-66", value: "01", decoded: null }
+            ], raw: "001012024010113000107516501750054320140200410100900098765432170100000000000000000000000000000000000000000000000000000000000000000000000000MARTIN JEAN               000005432101" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Petit Sophie", insee: "2800675003456", icon: "PS", color: "#FCE7F3",
+      dossiers: [
+        {
+          nudos: "01", label: "Dossier 01",
+          cartes: [
+            { type: "01", label: "État civil", line: 210, fields: [
+              { name: "Date d'effet", pos: "42-49", value: "01012024", decoded: "01/01/2024" },
+              { name: "Nom d'usage", pos: "50-79", value: "PETIT", decoded: null },
+              { name: "Prénom", pos: "80-109", value: "SOPHIE", decoded: null },
+              { name: "Date naissance", pos: "110-117", value: "08121980", decoded: "08/12/1980" },
+              { name: "Sexe", pos: "118-118", value: "2", decoded: "Féminin" },
+              { name: "Situation fam.", pos: "119-119", value: "D", decoded: "Divorcé(e)" }
+            ], raw: "00101202401011300010752800675003456010101012024PETIT                         SOPHIE                        08121980 2D" },
+            { type: "05", label: "Indemnités", line: 211, fields: [
+              { name: "Code opération", pos: "42-42", value: "1", decoded: "Paiement" },
+              { name: "Code indemnité", pos: "43-46", value: "0412", decoded: "Traitement indiciaire" },
+              { name: "MC", pos: "47-47", value: "1", decoded: null },
+              { name: "Nb unités", pos: "48-55", value: "00015167", decoded: "151,67" },
+              { name: "Montant", pos: "56-67", value: "000002876340", decoded: "2 876,34 €" }
+            ], raw: "00101202401011300010752800675003456010510412100015167000002876340" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Durand Karim", insee: "1850275009876", icon: "DK", color: "#EDE9FE",
+      dossiers: [{ nudos: "01", label: "Dossier 01", cartes: [
+        { type: "01", label: "État civil", line: 340, fields: [
+          { name: "Date d'effet", pos: "42-49", value: "01012024", decoded: "01/01/2024" },
+          { name: "Nom d'usage", pos: "50-79", value: "DURAND", decoded: null },
+          { name: "Prénom", pos: "80-109", value: "KARIM", decoded: null }
+        ], raw: "00101202401011300010751850275009876010101012024DURAND                        KARIM" }
+      ]}]
+    },
+    {
+      name: "Bernard Amélie", insee: "2850275001234", icon: "BA", color: "#FFEDD5",
+      dossiers: [{ nudos: "01", label: "Dossier 01", cartes: [
+        { type: "01", label: "État civil", line: 450, fields: [
+          { name: "Date d'effet", pos: "42-49", value: "01012024", decoded: "01/01/2024" },
+          { name: "Nom d'usage", pos: "50-79", value: "BERNARD", decoded: null },
+          { name: "Prénom", pos: "80-109", value: "AMELIE", decoded: null }
+        ], raw: "00101202401011300010752850275001234010101012024BERNARD                       AMELIE" }
+      ]}]
+    }
+  ]
+};
+
+// ===== STATE =====
+let currentView = 'fichier';
+let selectedIndividu = null;
+let selectedDossier = null;
+let selectedCarte = null;
+
+// ===== SEGMENTATION COLORS =====
+const segColors = [
+  { bg: '#3D3A50', fg: '#B8B0E0' },
+  { bg: '#3A503D', fg: '#B0E0B8' },
+  { bg: '#503A3D', fg: '#E0B0B8' },
+  { bg: '#3A4650', fg: '#B0D8E0' },
+  { bg: '#504A3A', fg: '#E0D8B0' },
+  { bg: '#3A5048', fg: '#B0E0D8' },
+  { bg: '#483A50', fg: '#D0B0E0' },
+  { bg: '#50463A', fg: '#E0D0B0' },
+];
+
+// ===== RENDER TREE =====
+function renderTree() {
+  const tree = document.getElementById('tree');
+  let html = '';
+
+  // Fichier
+  const fichierSelected = currentView === 'fichier' ? 'selected' : '';
+  html += `<div class="tree-item ${fichierSelected}" onclick="navigateTo('fichier')">
+    <span class="tree-toggle">▾</span>
+    <span class="tree-icon">📄</span>
+    <span class="tree-name">${data.fichier.name}</span>
+    <span class="tree-badge">${data.individus.length}</span>
+  </div>`;
+
+  data.individus.forEach((ind, i) => {
+    const indSelected = currentView === 'individu' && selectedIndividu === i ? 'selected' : '';
+    const hasSelectedChild = selectedIndividu === i && (currentView === 'dossier' || currentView === 'carte');
+    const expanded = selectedIndividu === i;
+
+    html += `<div class="tree-item ${indSelected}" onclick="navigateTo('individu', ${i})">
+      <span class="indent"></span>
+      <span class="tree-toggle">${expanded ? '▾' : '▸'}</span>
+      <span class="tree-icon">👤</span>
+      <span class="tree-name">${ind.name}</span>
+      <span class="tree-badge">${ind.dossiers.reduce((s, d) => s + d.cartes.length, 0)}</span>
+    </div>`;
+
+    if (expanded) {
+      ind.dossiers.forEach((dos, j) => {
+        const dosSelected = currentView === 'dossier' && selectedIndividu === i && selectedDossier === j ? 'selected' : '';
+        const dosExpanded = selectedDossier === j && selectedIndividu === i;
+
+        html += `<div class="tree-item ${dosSelected}" onclick="navigateTo('dossier', ${i}, ${j})">
+          <span class="indent"></span><span class="indent"></span>
+          <span class="tree-toggle">${dosExpanded ? '▾' : '▸'}</span>
+          <span class="tree-icon">📁</span>
+          <span class="tree-name">${dos.label}</span>
+          <span class="tree-badge">${dos.cartes.length}</span>
+        </div>`;
+
+        if (dosExpanded) {
+          dos.cartes.forEach((carte, k) => {
+            const carteSelected = currentView === 'carte' && selectedIndividu === i && selectedDossier === j && selectedCarte === k ? 'selected' : '';
+            html += `<div class="tree-item ${carteSelected}" onclick="navigateTo('carte', ${i}, ${j}, ${k})">
+              <span class="indent"></span><span class="indent"></span><span class="indent"></span>
+              <span class="tree-icon">📋</span>
+              <span class="tree-name">Carte ${carte.type} — ${carte.label}</span>
+            </div>`;
+          });
+        }
+      });
+    }
+  });
+
+  tree.innerHTML = html;
+}
+
+// ===== RENDER BREADCRUMB =====
+function renderBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  let items = [];
+
+  items.push(`<span class="bc-item ${currentView === 'fichier' ? 'current' : ''}" onclick="navigateTo('fichier')">${data.fichier.name}</span>`);
+
+  if (selectedIndividu !== null) {
+    items.push(`<span class="sep">›</span>`);
+    items.push(`<span class="bc-item ${currentView === 'individu' ? 'current' : ''}" onclick="navigateTo('individu', ${selectedIndividu})">${data.individus[selectedIndividu].name}</span>`);
+  }
+  if (selectedDossier !== null && selectedIndividu !== null) {
+    items.push(`<span class="sep">›</span>`);
+    items.push(`<span class="bc-item ${currentView === 'dossier' ? 'current' : ''}" onclick="navigateTo('dossier', ${selectedIndividu}, ${selectedDossier})">${data.individus[selectedIndividu].dossiers[selectedDossier].label}</span>`);
+  }
+  if (selectedCarte !== null && selectedDossier !== null && selectedIndividu !== null) {
+    const carte = data.individus[selectedIndividu].dossiers[selectedDossier].cartes[selectedCarte];
+    items.push(`<span class="sep">›</span>`);
+    items.push(`<span class="bc-item current">Carte ${carte.type}</span>`);
+  }
+
+  bc.innerHTML = items.join('');
+}
+
+// ===== NAVIGATE =====
+function navigateTo(view, indIdx, dosIdx, carteIdx) {
+  currentView = view;
+
+  if (view === 'fichier') {
+    selectedIndividu = null;
+    selectedDossier = null;
+    selectedCarte = null;
+  } else if (view === 'individu') {
+    selectedIndividu = indIdx;
+    selectedDossier = null;
+    selectedCarte = null;
+  } else if (view === 'dossier') {
+    selectedIndividu = indIdx;
+    selectedDossier = dosIdx;
+    selectedCarte = null;
+  } else if (view === 'carte') {
+    selectedIndividu = indIdx;
+    selectedDossier = dosIdx;
+    selectedCarte = carteIdx;
+  }
+
+  renderAll();
+}
+
+// ===== RENDER VIEWS =====
+function renderFichierView() {
+  const list = document.getElementById('fichier-individus-list');
+  list.innerHTML = data.individus.map((ind, i) => {
+    const totalCartes = ind.dossiers.reduce((s, d) => s + d.cartes.length, 0);
+    const types = [...new Set(ind.dossiers.flatMap(d => d.cartes.map(c => c.type)))];
+    return `<div class="fiche-list-item" onclick="navigateTo('individu', ${i})">
+      <div class="fiche-list-icon" style="background:${ind.color};color:var(--text-primary);font-size:13px;font-weight:600;">${ind.icon}</div>
+      <div class="fiche-list-content">
+        <div class="fiche-list-name">${ind.name}</div>
+        <div class="fiche-list-detail">INSEE ${ind.insee} · ${ind.dossiers.length} dossier${ind.dossiers.length > 1 ? 's' : ''} · ${totalCartes} cartes</div>
+        <div class="fiche-list-badges">${types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('')}</div>
+      </div>
+      <div class="fiche-list-arrow">→</div>
+    </div>`;
+  }).join('');
+}
+
+function renderIndividuView() {
+  if (selectedIndividu === null) return;
+  const ind = data.individus[selectedIndividu];
+  const totalCartes = ind.dossiers.reduce((s, d) => s + d.cartes.length, 0);
+
+  document.getElementById('individu-header').innerHTML = `
+    <div class="fiche-avatar" style="background:${ind.color};color:var(--text-primary);font-size:18px;font-weight:700;">${ind.icon}</div>
+    <div>
+      <div class="fiche-title">${ind.name}</div>
+      <div class="fiche-meta">INSEE ${ind.insee}</div>
+    </div>`;
+
+  document.getElementById('individu-stats').innerHTML = `
+    <div class="stat-card info"><div class="stat-value">${ind.dossiers.length}</div><div class="stat-label">Dossier${ind.dossiers.length > 1 ? 's' : ''} de paie</div></div>
+    <div class="stat-card purple"><div class="stat-value">${totalCartes}</div><div class="stat-label">Cartes au total</div></div>
+    <div class="stat-card ok"><div class="stat-value">${[...new Set(ind.dossiers.flatMap(d => d.cartes.map(c => c.type)))].length}</div><div class="stat-label">Types de cartes</div></div>`;
+
+  document.getElementById('individu-dossiers-count').textContent = `(${ind.dossiers.length})`;
+  document.getElementById('individu-dossiers-list').innerHTML = ind.dossiers.map((dos, j) => {
+    const types = dos.cartes.map(c => c.type);
+    return `<div class="fiche-list-item" onclick="navigateTo('dossier', ${selectedIndividu}, ${j})">
+      <div class="fiche-list-icon" style="background:var(--bg-secondary);font-size:18px;">📁</div>
+      <div class="fiche-list-content">
+        <div class="fiche-list-name">${dos.label} <span style="font-size:12px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;">NUDOS ${dos.nudos}</span></div>
+        <div class="fiche-list-detail">${dos.cartes.length} cartes</div>
+        <div class="fiche-list-badges">${types.map(t => `<span class="type-badge type-${t}">${t}</span>`).join('')}</div>
+      </div>
+      <div class="fiche-list-arrow">→</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDossierView() {
+  if (selectedIndividu === null || selectedDossier === null) return;
+  const ind = data.individus[selectedIndividu];
+  const dos = ind.dossiers[selectedDossier];
+
+  document.getElementById('dossier-header').innerHTML = `
+    <div class="fiche-avatar" style="background:var(--bg-secondary);font-size:22px;">📁</div>
+    <div>
+      <div class="fiche-title">${dos.label}</div>
+      <div class="fiche-subtitle">${ind.name} · <span style="font-family:'JetBrains Mono',monospace;">NUDOS ${dos.nudos}</span></div>
+    </div>`;
+
+  document.getElementById('dossier-stats').innerHTML = `
+    <div class="stat-card info"><div class="stat-value">${dos.cartes.length}</div><div class="stat-label">Cartes</div></div>
+    <div class="stat-card purple"><div class="stat-value">${[...new Set(dos.cartes.map(c => c.type))].length}</div><div class="stat-label">Types distincts</div></div>`;
+
+  document.getElementById('dossier-cartes-count').textContent = `(${dos.cartes.length})`;
+  document.getElementById('dossier-cartes-list').innerHTML = dos.cartes.map((carte, k) => {
+    const fieldsPreview = carte.fields.slice(0, 3).map(f => `${f.name}: <strong>${f.decoded || f.value}</strong>`).join(' · ');
+    return `<div class="fiche-list-item" onclick="navigateTo('carte', ${selectedIndividu}, ${selectedDossier}, ${k})">
+      <div class="fiche-list-icon" style="background:var(--bg-secondary);"><span class="type-badge type-${carte.type}" style="font-size:13px;padding:4px 8px;">${carte.type}</span></div>
+      <div class="fiche-list-content">
+        <div class="fiche-list-name">Carte ${carte.type} — ${carte.label}</div>
+        <div class="fiche-list-detail">Ligne ${carte.line} · ${carte.fields.length} champs</div>
+        <div class="fiche-list-detail" style="margin-top:4px;">${fieldsPreview}</div>
+      </div>
+      <div class="fiche-list-arrow">→</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCarteView() {
+  if (selectedIndividu === null || selectedDossier === null || selectedCarte === null) return;
+  const ind = data.individus[selectedIndividu];
+  const dos = ind.dossiers[selectedDossier];
+  const carte = dos.cartes[selectedCarte];
+
+  // Panel Detail
+  const detailEl = document.getElementById('carte-detail');
+
+  // Navigation entre cartes du dossier
+  const prevCarte = selectedCarte > 0 ? selectedCarte - 1 : null;
+  const nextCarte = selectedCarte < dos.cartes.length - 1 ? selectedCarte + 1 : null;
+  let navHtml = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">`;
+  navHtml += `<div class="detail-header" style="margin-bottom:0;flex:1;">
+    <span class="type-badge type-${carte.type}" style="font-size:13px;padding:3px 10px;">${carte.type}</span>
+    Carte ${carte.type} — ${carte.label}
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-weight:400;">Ligne ${carte.line} · ${selectedCarte + 1}/${dos.cartes.length}</span>
+  </div>`;
+  navHtml += `<div style="display:flex;gap:4px;">`;
+  if (prevCarte !== null) {
+    navHtml += `<button onclick="navigateTo('carte', ${selectedIndividu}, ${selectedDossier}, ${prevCarte})" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;" title="Carte précédente: ${dos.cartes[prevCarte].type} — ${dos.cartes[prevCarte].label}">◀</button>`;
+  } else {
+    navHtml += `<button disabled style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-muted);font-size:12px;cursor:default;">◀</button>`;
+  }
+  if (nextCarte !== null) {
+    navHtml += `<button onclick="navigateTo('carte', ${selectedIndividu}, ${selectedDossier}, ${nextCarte})" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;" title="Carte suivante: ${dos.cartes[nextCarte].type} — ${dos.cartes[nextCarte].label}">▶</button>`;
+  } else {
+    navHtml += `<button disabled style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-muted);font-size:12px;cursor:default;">▶</button>`;
+  }
+  navHtml += `</div></div>`;
+
+  let detailHtml = navHtml;
+  detailHtml += '<div class="field-grid">';
+  carte.fields.forEach((f, fi) => {
+    detailHtml += `<div class="field-item" onmouseenter="highlightSeg(${fi})" onmouseleave="unhighlightSeg(${fi})">
+      <div class="field-label">${f.name} <span class="field-pos">pos ${f.pos}</span></div>
+      <div class="field-value">${f.value}</div>
+      ${f.decoded ? `<div class="field-decoded">[${f.decoded}]</div>` : ''}
+    </div>`;
+  });
+  detailHtml += '</div>';
+  detailEl.innerHTML = detailHtml;
+
+  // Panel Raw
+  const rawEl = document.getElementById('carte-raw');
+  let rawStr = carte.raw || '';
+  // Pad to 204 if shorter
+  rawStr = rawStr.padEnd(204, ' ');
+
+  // Build segments based on field positions
+  let rawHtml = `<div class="raw-line"><span class="raw-linenum">${carte.line}</span><span class="raw-content">`;
+
+  // Common fields (positions 0-41)
+  const commonSegs = [
+    { start: 0, end: 3, label: 'GCORR' },
+    { start: 3, end: 9, label: 'datePaye' },
+    { start: 9, end: 11, label: 'chaîne' },
+    { start: 11, end: 13, label: 'numRemise' },
+    { start: 13, end: 16, label: 'codeMIN' },
+    { start: 16, end: 19, label: 'codeADM' },
+    { start: 19, end: 22, label: 'codeDPT' },
+    { start: 22, end: 37, label: 'INSEE' },
+    { start: 37, end: 39, label: 'NUDOS' },
+    { start: 39, end: 41, label: 'codeCarte' },
+  ];
+
+  commonSegs.forEach((seg, si) => {
+    const col = segColors[si % segColors.length];
+    const text = rawStr.substring(seg.start, seg.end);
+    rawHtml += `<span class="raw-seg" style="background:${col.bg};color:${col.fg};" title="${seg.label} (pos ${seg.start+1}-${seg.end})">${text}</span>`;
+  });
+
+  // Specific fields
+  const specificStart = 41;
+  const fieldLen = Math.max(1, Math.floor((160 - specificStart) / Math.max(1, carte.fields.length)));
+  carte.fields.forEach((f, fi) => {
+    const col = segColors[(fi + commonSegs.length) % segColors.length];
+    const posMatch = f.pos.match(/(\d+)-(\d+)/);
+    let start = specificStart + fi * fieldLen;
+    let end = start + fieldLen;
+    if (posMatch) {
+      start = parseInt(posMatch[1]) - 1;
+      end = parseInt(posMatch[2]);
+    }
+    start = Math.min(start, rawStr.length);
+    end = Math.min(end, rawStr.length);
+    const text = rawStr.substring(start, end) || f.value;
+    rawHtml += `<span class="raw-seg" id="seg-${fi}" style="background:${col.bg};color:${col.fg};" title="${f.name} (pos ${f.pos})">${text}</span>`;
+  });
+
+  // Remaining
+  const lastEnd = carte.fields.length > 0 ? (() => {
+    const last = carte.fields[carte.fields.length - 1].pos;
+    const m = last.match(/(\d+)-(\d+)/);
+    return m ? parseInt(m[2]) : 160;
+  })() : 160;
+  if (lastEnd < rawStr.length) {
+    const remaining = rawStr.substring(lastEnd);
+    if (remaining.trim()) {
+      rawHtml += `<span class="raw-seg" style="background:#2A2A2E;color:#71717A;" title="Reste (pos ${lastEnd+1}-204)">${remaining.substring(0, 40)}${remaining.length > 40 ? '…' : ''}</span>`;
+    }
+  }
+
+  rawHtml += '</span></div>';
+  rawEl.innerHTML = rawHtml;
+}
+
+// ===== HIGHLIGHT SYNC =====
+function highlightSeg(idx) {
+  const seg = document.getElementById('seg-' + idx);
+  if (seg) seg.classList.add('highlighted');
+}
+function unhighlightSeg(idx) {
+  const seg = document.getElementById('seg-' + idx);
+  if (seg) seg.classList.remove('highlighted');
+}
+
+// ===== TOGGLE EDIT =====
+function toggleEdit() {
+  const btn = document.getElementById('btn-edit');
+  btn.classList.toggle('active');
+  btn.textContent = btn.classList.contains('active') ? '✏️ Édition active' : '✏️ Édition';
+}
+
+// ===== RENDER ALL =====
+function renderAll() {
+  // Hide all views
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+  // Show current view
+  const viewEl = document.getElementById('view-' + currentView);
+  if (viewEl) {
+    viewEl.classList.add('active');
+    // Re-trigger animation
+    const fiche = viewEl.querySelector('.fiche, .three-panels');
+    if (fiche) { fiche.classList.remove('fade-in'); void fiche.offsetWidth; fiche.classList.add('fade-in'); }
+  }
+
+  // Render content
+  if (currentView === 'fichier') renderFichierView();
+  else if (currentView === 'individu') renderIndividuView();
+  else if (currentView === 'dossier') renderDossierView();
+  else if (currentView === 'carte') renderCarteView();
+
+  renderTree();
+  renderBreadcrumb();
+}
+
+// ===== INIT =====
+renderAll();
+</script>
+</body>
+</html>

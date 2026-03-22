@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRIS — Directions de Design UX</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg-primary: #FAFAFA;
+    --bg-secondary: #F4F4F5;
+    --bg-tertiary: #E4E4E7;
+    --text-primary: #18181B;
+    --text-secondary: #71717A;
+    --text-muted: #A1A1AA;
+    --border: #E4E4E7;
+    --accent: #3B82F6;
+    --accent-light: #DBEAFE;
+    --valid: #22C55E;
+    --valid-bg: #DCFCE7;
+    --intermediate: #F59E0B;
+    --intermediate-bg: #FEF3C7;
+    --invalid: #EF4444;
+    --invalid-bg: #FEE2E2;
+    --diff-added: #DCFCE7;
+    --diff-removed: #FEE2E2;
+    --diff-modified: #DBEAFE;
+    /* Segmentation pastel palette */
+    --seg-1: #E0E7FF;
+    --seg-2: #FCE7F3;
+    --seg-3: #DBEAFE;
+    --seg-4: #D1FAE5;
+    --seg-5: #FEF3C7;
+    --seg-6: #EDE9FE;
+    --seg-7: #FFEDD5;
+    --seg-8: #E0F2FE;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #09090B; color: #fff; }
+
+  /* ===== NAV HEADER ===== */
+  .nav-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: #09090B; border-bottom: 1px solid #27272A;
+    padding: 12px 32px; display: flex; align-items: center; gap: 24px;
+  }
+  .nav-header h1 { font-size: 18px; font-weight: 600; color: #fff; }
+  .nav-header .subtitle { font-size: 13px; color: #71717A; }
+  .nav-tabs { display: flex; gap: 4px; margin-left: auto; }
+  .nav-tab {
+    padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    color: #A1A1AA; cursor: pointer; border: none; background: none; transition: all 0.2s;
+  }
+  .nav-tab:hover { color: #fff; background: #27272A; }
+  .nav-tab.active { color: #fff; background: #3B82F6; }
+
+  /* ===== MOCKUP CONTAINER ===== */
+  .mockup-container {
+    margin-top: 56px; padding: 32px; display: none;
+  }
+  .mockup-container.active { display: block; }
+
+  .mockup-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .mockup-desc { font-size: 14px; color: #A1A1AA; margin-bottom: 24px; line-height: 1.6; max-width: 800px; }
+
+  /* ===== MOCKUP FRAME ===== */
+  .mockup-frame {
+    background: var(--bg-primary); border-radius: 12px; overflow: hidden;
+    border: 1px solid #27272A; height: 680px; display: flex; flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  }
+
+  /* ===== WINDOW CHROME ===== */
+  .window-chrome {
+    background: #27272A; padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid #3F3F46;
+  }
+  .window-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .window-dot.red { background: #EF4444; }
+  .window-dot.yellow { background: #F59E0B; }
+  .window-dot.green { background: #22C55E; }
+  .window-title { font-size: 12px; color: #A1A1AA; margin-left: 8px; }
+
+  /* ===== DIRECTION A: CLASSIC THREE-PANEL ===== */
+  .dir-a { display: flex; flex: 1; min-height: 0; }
+  .dir-a .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 12px 0; gap: 4px; border-right: 1px solid #27272A;
+  }
+  .dir-a .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 16px; cursor: pointer; transition: all 0.15s;
+  }
+  .dir-a .sidebar-l1 .icon:hover { background: #27272A; color: #fff; }
+  .dir-a .sidebar-l1 .icon.active { background: #3B82F6; color: #fff; }
+  .dir-a .sidebar-l2 {
+    width: 260px; background: var(--bg-secondary); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .dir-a .sidebar-l2-header {
+    padding: 12px 16px; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+  }
+  .dir-a .tree-item {
+    padding: 6px 16px; font-size: 13px; color: var(--text-primary); cursor: pointer;
+    display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+  }
+  .dir-a .tree-item:hover { background: var(--bg-tertiary); }
+  .dir-a .tree-item.selected { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+  .dir-a .tree-item .indent { width: 16px; }
+  .dir-a .tree-icon { font-size: 14px; width: 18px; text-align: center; }
+  .dir-a .tree-badge {
+    margin-left: auto; font-size: 11px; background: var(--bg-tertiary); color: var(--text-secondary);
+    padding: 1px 6px; border-radius: 10px;
+  }
+
+  .dir-a .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .dir-a .toolbar {
+    height: 40px; background: var(--bg-primary); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 8px;
+  }
+  .dir-a .breadcrumb { font-size: 13px; color: var(--text-secondary); display: flex; gap: 4px; align-items: center; }
+  .dir-a .breadcrumb span { color: var(--text-primary); font-weight: 500; }
+  .dir-a .breadcrumb .sep { color: var(--text-muted); }
+  .dir-a .toolbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .dir-a .toggle-edit {
+    font-size: 12px; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+  }
+  .dir-a .toggle-edit:hover { border-color: var(--accent); color: var(--accent); }
+  .dir-a .toggle-edit.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .dir-a .btn-export {
+    font-size: 12px; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-primary); color: var(--text-secondary); cursor: pointer;
+  }
+
+  .dir-a .panels { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* Panel 1: List */
+  .dir-a .panel-list {
+    flex: 2; border-bottom: 1px solid var(--border); overflow: auto;
+  }
+  .dir-a .panel-list table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .dir-a .panel-list th {
+    text-align: left; padding: 6px 12px; font-weight: 600; color: var(--text-secondary);
+    background: var(--bg-secondary); border-bottom: 1px solid var(--border); position: sticky; top: 0;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .dir-a .panel-list td { padding: 5px 12px; border-bottom: 1px solid #F4F4F5; color: var(--text-primary); }
+  .dir-a .panel-list tr:hover td { background: #F8FAFC; }
+  .dir-a .panel-list tr.selected td { background: var(--accent-light); }
+  .dir-a .type-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .dir-a .type-00 { background: #DBEAFE; color: #1D4ED8; }
+  .dir-a .type-01 { background: #D1FAE5; color: #059669; }
+  .dir-a .type-05 { background: #FEF3C7; color: #D97706; }
+  .dir-a .type-40 { background: #EDE9FE; color: #7C3AED; }
+  .dir-a .type-22 { background: #FCE7F3; color: #DB2777; }
+
+  /* Panel 2: Detail */
+  .dir-a .panel-detail {
+    flex: 2; border-bottom: 1px solid var(--border); overflow: auto; padding: 12px 16px;
+  }
+  .dir-a .panel-detail-header {
+    font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dir-a .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dir-a .field-item {
+    display: flex; flex-direction: column; gap: 2px; padding: 6px 8px;
+    border-radius: 6px; border: 1px solid transparent; transition: all 0.15s;
+  }
+  .dir-a .field-item:hover { background: var(--bg-secondary); border-color: var(--border); }
+  .dir-a .field-label {
+    font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;
+    display: flex; justify-content: space-between;
+  }
+  .dir-a .field-pos { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted); }
+  .dir-a .field-value { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .dir-a .field-decoded { font-size: 11px; color: var(--accent); }
+
+  /* Panel 3: Raw View */
+  .dir-a .panel-raw {
+    flex: 1; background: #18181B; padding: 8px 12px; overflow: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6;
+  }
+  .dir-a .raw-line { display: flex; gap: 8px; }
+  .dir-a .raw-linenum { color: #52525B; min-width: 30px; text-align: right; user-select: none; }
+  .dir-a .raw-content { display: flex; flex-wrap: nowrap; }
+  .dir-a .raw-seg { padding: 1px 0; border-radius: 2px; }
+
+  /* ===== DIRECTION B: HORIZONTAL SPLIT ===== */
+  .dir-b { display: flex; flex: 1; min-height: 0; }
+  .dir-b .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 12px 0; gap: 4px; border-right: 1px solid #27272A;
+  }
+  .dir-b .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 16px; cursor: pointer;
+  }
+  .dir-b .sidebar-l1 .icon.active { background: #3B82F6; color: #fff; }
+  .dir-b .main-area { flex: 1; display: flex; min-width: 0; }
+  .dir-b .left-pane {
+    width: 420px; display: flex; flex-direction: column; border-right: 1px solid var(--border);
+  }
+  .dir-b .left-header {
+    padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    border-bottom: 1px solid var(--border); background: var(--bg-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .dir-b .left-list { flex: 1; overflow: auto; }
+  .dir-b .list-row {
+    padding: 8px 16px; border-bottom: 1px solid #F4F4F5; display: flex; align-items: center;
+    gap: 12px; font-size: 13px; cursor: pointer; transition: background 0.1s;
+  }
+  .dir-b .list-row:hover { background: #F8FAFC; }
+  .dir-b .list-row.selected { background: var(--accent-light); border-left: 3px solid var(--accent); }
+  .dir-b .list-avatar {
+    width: 32px; height: 32px; border-radius: 8px; background: var(--bg-tertiary);
+    display: flex; align-items: center; justify-content: center; font-size: 12px;
+    font-weight: 600; color: var(--text-secondary);
+  }
+  .dir-b .list-info { flex: 1; }
+  .dir-b .list-name { font-weight: 500; color: var(--text-primary); }
+  .dir-b .list-meta { font-size: 11px; color: var(--text-secondary); }
+
+  .dir-b .right-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .dir-b .right-header {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .dir-b .right-header .name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .dir-b .right-header .insee { font-size: 12px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+  .dir-b .tabs-bar {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--bg-secondary);
+  }
+  .dir-b .tab-item {
+    padding: 8px 16px; font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.15s;
+  }
+  .dir-b .tab-item:hover { color: var(--text-primary); }
+  .dir-b .tab-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .dir-b .card-content { flex: 1; overflow: auto; padding: 16px; }
+  .dir-b .card-section {
+    margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .dir-b .card-section-title {
+    padding: 8px 12px; background: var(--bg-secondary); font-size: 12px; font-weight: 600;
+    color: var(--text-secondary); border-bottom: 1px solid var(--border);
+  }
+  .dir-b .card-fields { padding: 8px 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .dir-b .card-field-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .dir-b .card-field-value { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+
+  /* ===== DIRECTION C: COMPACT DATA-DENSE ===== */
+  .dir-c { display: flex; flex: 1; min-height: 0; }
+  .dir-c .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 12px 0; gap: 4px; border-right: 1px solid #27272A;
+  }
+  .dir-c .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 16px;
+  }
+  .dir-c .sidebar-l1 .icon.active { background: #3B82F6; color: #fff; }
+  .dir-c .sidebar-l2 {
+    width: 220px; background: var(--bg-secondary); border-right: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .dir-c .sidebar-l2-header {
+    padding: 8px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .dir-c .sidebar-l2-search {
+    margin: 8px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border);
+    font-size: 12px; width: calc(100% - 16px); background: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  .dir-c .tree-item {
+    padding: 4px 12px; font-size: 12px; color: var(--text-primary); cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dir-c .tree-item:hover { background: var(--bg-tertiary); }
+  .dir-c .tree-item.selected { background: var(--accent-light); color: var(--accent); }
+  .dir-c .tree-item .indent { width: 12px; }
+
+  .dir-c .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .dir-c .toolbar {
+    height: 36px; background: var(--bg-primary); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 12px; gap: 8px; font-size: 12px;
+  }
+  .dir-c .breadcrumb { color: var(--text-secondary); display: flex; gap: 4px; align-items: center; font-size: 12px; }
+  .dir-c .breadcrumb span { color: var(--text-primary); font-weight: 500; }
+  .dir-c .breadcrumb .sep { color: var(--text-muted); font-size: 10px; }
+
+  .dir-c .split-h { flex: 1; display: flex; min-height: 0; }
+  .dir-c .panel-table { flex: 1; overflow: auto; }
+  .dir-c .panel-table table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .dir-c .panel-table th {
+    text-align: left; padding: 4px 8px; font-weight: 600; color: var(--text-muted);
+    background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+    font-size: 10px; text-transform: uppercase; position: sticky; top: 0;
+  }
+  .dir-c .panel-table td { padding: 3px 8px; border-bottom: 1px solid #F4F4F5; color: var(--text-primary); }
+  .dir-c .panel-table tr:hover td { background: #F8FAFC; }
+  .dir-c .panel-table tr.selected td { background: var(--accent-light); }
+
+  .dir-c .panel-raw-side {
+    width: 380px; background: #18181B; border-left: 1px solid #27272A;
+    padding: 8px; overflow: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    line-height: 1.8;
+  }
+
+  /* ===== DIRECTION D: COMPARE VIEW ===== */
+  .dir-d { display: flex; flex: 1; min-height: 0; }
+  .dir-d .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 12px 0; gap: 4px; border-right: 1px solid #27272A;
+  }
+  .dir-d .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 16px;
+  }
+  .dir-d .sidebar-l1 .icon.active { background: #3B82F6; color: #fff; }
+
+  .dir-d .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .dir-d .compare-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px;
+  }
+  .dir-d .compare-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .dir-d .compare-stats { display: flex; gap: 12px; margin-left: auto; }
+  .dir-d .stat-item {
+    display: flex; align-items: center; gap: 4px; font-size: 12px; padding: 4px 10px;
+    border-radius: 6px;
+  }
+  .dir-d .stat-match { background: var(--valid-bg); color: #059669; }
+  .dir-d .stat-diff { background: var(--diff-modified); color: #1D4ED8; }
+  .dir-d .stat-orphan { background: var(--invalid-bg); color: #DC2626; }
+  .dir-d .stat-new { background: var(--diff-added); color: #059669; }
+
+  .dir-d .compare-nav {
+    padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--bg-secondary);
+    display: flex; align-items: center; gap: 8px; font-size: 12px;
+  }
+  .dir-d .nav-btn {
+    padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-primary);
+    font-size: 11px; color: var(--text-secondary); cursor: pointer;
+  }
+  .dir-d .nav-counter { color: var(--text-secondary); font-weight: 500; }
+  .dir-d .filter-chips { margin-left: auto; display: flex; gap: 4px; }
+  .dir-d .chip {
+    padding: 3px 8px; border-radius: 12px; font-size: 11px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-primary); color: var(--text-secondary);
+  }
+  .dir-d .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .dir-d .compare-body { flex: 1; overflow: auto; }
+  .dir-d .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .dir-d .compare-table th {
+    padding: 6px 12px; text-align: left; font-weight: 600; color: var(--text-secondary);
+    background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; position: sticky; top: 0;
+  }
+  .dir-d .compare-table td { padding: 5px 12px; border-bottom: 1px solid #F4F4F5; }
+  .dir-d .compare-table tr.diff-row td { background: var(--diff-modified); }
+  .dir-d .compare-table tr.added-row td { background: var(--diff-added); }
+  .dir-d .compare-table tr.removed-row td { background: var(--diff-removed); }
+  .dir-d .diff-indicator { font-weight: 600; width: 24px; text-align: center; }
+  .dir-d .val-ref { color: var(--text-primary); }
+  .dir-d .val-cmp { color: var(--text-primary); }
+  .dir-d .val-changed { font-weight: 600; }
+
+  /* ===== DIRECTION E: IMPORT VIEW ===== */
+  .dir-e { display: flex; flex: 1; min-height: 0; }
+  .dir-e .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 12px 0; gap: 4px; border-right: 1px solid #27272A;
+  }
+  .dir-e .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 16px;
+  }
+  .dir-e .sidebar-l1 .icon.active { background: #3B82F6; color: #fff; }
+
+  .dir-e .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .dir-e .import-content { flex: 1; padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .dir-e .drop-zone {
+    width: 100%; max-width: 600px; height: 240px; border: 2px dashed var(--border);
+    border-radius: 16px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; transition: all 0.2s; cursor: pointer;
+  }
+  .dir-e .drop-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+  .dir-e .drop-icon { font-size: 48px; color: var(--text-muted); }
+  .dir-e .drop-text { font-size: 16px; color: var(--text-primary); font-weight: 500; }
+  .dir-e .drop-hint { font-size: 13px; color: var(--text-secondary); }
+  .dir-e .drop-btn {
+    padding: 8px 24px; background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .dir-e .recent-files { width: 100%; max-width: 600px; margin-top: 32px; }
+  .dir-e .recent-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .dir-e .recent-item {
+    padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .dir-e .recent-item:hover { border-color: var(--accent); background: var(--accent-light); }
+  .dir-e .recent-icon { font-size: 20px; color: var(--text-muted); }
+  .dir-e .recent-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .dir-e .recent-meta { font-size: 11px; color: var(--text-secondary); }
+
+  /* ===== DIRECTION F: VALIDATION REPORT ===== */
+  .dir-f { display: flex; flex: 1; min-height: 0; }
+  .dir-f .sidebar-l1 {
+    width: 48px; background: #18181B; display: flex; flex-direction: column;
+    align-items: center; padding: 12px 0; gap: 4px; border-right: 1px solid #27272A;
+  }
+  .dir-f .sidebar-l1 .icon {
+    width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #71717A; font-size: 16px;
+  }
+  .dir-f .sidebar-l1 .icon.active { background: #3B82F6; color: #fff; }
+
+  .dir-f .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 24px; overflow: auto; }
+  .dir-f .report-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  }
+  .dir-f .report-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+  .dir-f .report-file { font-size: 13px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+  .dir-f .report-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .dir-f .report-card {
+    padding: 16px; border-radius: 10px; border: 1px solid var(--border);
+  }
+  .dir-f .report-card-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+  .dir-f .report-card-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .dir-f .report-card.ok { border-left: 4px solid var(--valid); }
+  .dir-f .report-card.ko { border-left: 4px solid var(--invalid); }
+  .dir-f .report-card.types { border-left: 4px solid var(--accent); }
+  .dir-f .report-card.individus { border-left: 4px solid #8B5CF6; }
+
+  .dir-f .errors-section { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .dir-f .errors-header {
+    padding: 10px 16px; background: var(--invalid-bg); font-size: 13px; font-weight: 600;
+    color: #DC2626; display: flex; align-items: center; gap: 8px;
+  }
+  .dir-f .error-row {
+    padding: 8px 16px; border-bottom: 1px solid #F4F4F5; display: flex; align-items: center;
+    gap: 12px; font-size: 12px; cursor: pointer; transition: background 0.1s;
+  }
+  .dir-f .error-row:hover { background: #FEF2F2; }
+  .dir-f .error-line {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted);
+    min-width: 60px;
+  }
+  .dir-f .error-type {
+    padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600;
+    background: var(--invalid-bg); color: #DC2626;
+  }
+  .dir-f .error-msg { color: var(--text-primary); flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<div class="nav-header">
+  <h1>IRIS</h1>
+  <span class="subtitle">Directions de Design UX</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showMockup('a')">A. Explorer — 3 panneaux</button>
+    <button class="nav-tab" onclick="showMockup('b')">B. Explorer — Fiche individu</button>
+    <button class="nav-tab" onclick="showMockup('c')">C. Explorer — Data-dense</button>
+    <button class="nav-tab" onclick="showMockup('d')">D. Comparer</button>
+    <button class="nav-tab" onclick="showMockup('e')">E. Importer</button>
+    <button class="nav-tab" onclick="showMockup('f')">F. Rapport validation</button>
+  </div>
+</div>
+
+<!-- ===== DIRECTION A: Classic Three-Panel (Explorer) ===== -->
+<div class="mockup-container active" id="mockup-a">
+  <div class="mockup-title">Direction A — Explorer : Architecture trois panneaux synchronisés</div>
+  <div class="mockup-desc">
+    Inspirée de Wireshark. Panneau haut : liste des lignes du fichier. Panneau central : champs décodés de la ligne sélectionnée. Panneau bas : vue brute 204 caractères avec segmentation colorée. Synchronisation bidirectionnelle entre les trois.
+  </div>
+  <div class="mockup-frame">
+    <div class="window-chrome">
+      <div class="window-dot red"></div>
+      <div class="window-dot yellow"></div>
+      <div class="window-dot green"></div>
+      <span class="window-title">IRIS — DADS_2024_M12.gest</span>
+    </div>
+    <div class="dir-a">
+      <!-- Sidebar L1 -->
+      <div class="sidebar-l1">
+        <div class="icon" title="Importer">📥</div>
+        <div class="icon active" title="Explorer">🔍</div>
+        <div class="icon" title="Comparer">⚖️</div>
+        <div style="flex:1"></div>
+        <div class="icon" title="Paramètres">⚙️</div>
+      </div>
+      <!-- Sidebar L2: Tree -->
+      <div class="sidebar-l2">
+        <div class="sidebar-l2-header">Explorateur</div>
+        <div class="tree-item" style="font-weight:500;">📄 DADS_2024_M12.gest</div>
+        <div class="tree-item"><span class="indent"></span>👤 Dupont Marie <span class="tree-badge">12</span></div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span>📁 Dossier 01 <span class="tree-badge">8</span></div>
+        <div class="tree-item selected"><span class="indent"></span><span class="indent"></span><span class="indent"></span><span class="tree-icon">📋</span> Carte 40</div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span><span class="indent"></span><span class="tree-icon">📋</span> Carte 01</div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span><span class="indent"></span><span class="tree-icon">📋</span> Carte 05</div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span>📁 Dossier 02 <span class="tree-badge">4</span></div>
+        <div class="tree-item"><span class="indent"></span>👤 Martin Jean <span class="tree-badge">9</span></div>
+        <div class="tree-item"><span class="indent"></span>👤 Petit Sophie <span class="tree-badge">7</span></div>
+        <div class="tree-item"><span class="indent"></span>👤 Durand Karim <span class="tree-badge">11</span></div>
+        <div class="tree-item"><span class="indent"></span>👤 Bernard Amélie <span class="tree-badge">6</span></div>
+      </div>
+      <!-- Main -->
+      <div class="main-area">
+        <div class="toolbar">
+          <div class="breadcrumb">
+            DADS_2024_M12.gest <span class="sep">›</span>
+            <span>Dupont Marie</span> <span class="sep">›</span>
+            Dossier 01 <span class="sep">›</span>
+            <span>Carte 40</span>
+          </div>
+          <div class="toolbar-actions">
+            <button class="toggle-edit">✏️ Édition</button>
+            <button class="btn-export">📤 Exporter</button>
+          </div>
+        </div>
+        <div class="panels">
+          <!-- Panel 1: List -->
+          <div class="panel-list">
+            <table>
+              <tr><th>Ligne</th><th>Type</th><th>INSEE</th><th>NUDOS</th><th>Nom</th><th>Clé</th></tr>
+              <tr><td>1</td><td><span class="type-badge type-00">00</span></td><td>—</td><td>—</td><td>— En-tête de bande —</td><td>—</td></tr>
+              <tr><td>45</td><td><span class="type-badge type-01">01</span></td><td>2750175001234</td><td>01</td><td>Dupont Marie</td><td>01/01/2024</td></tr>
+              <tr><td>46</td><td><span class="type-badge type-05">05</span></td><td>2750175001234</td><td>01</td><td>Dupont Marie</td><td>0412 - 2 345,67€</td></tr>
+              <tr class="selected"><td>47</td><td><span class="type-badge type-40">40</span></td><td>2750175001234</td><td>01</td><td>Dupont Marie</td><td>RIB</td></tr>
+              <tr><td>48</td><td><span class="type-badge type-22">22</span></td><td>2750175001234</td><td>01</td><td>Dupont Marie</td><td>Ind. 0301</td></tr>
+              <tr><td>49</td><td><span class="type-badge type-01">01</span></td><td>2750175001234</td><td>02</td><td>Dupont Marie</td><td>01/01/2024</td></tr>
+            </table>
+          </div>
+          <!-- Panel 2: Detail -->
+          <div class="panel-detail">
+            <div class="panel-detail-header">
+              <span class="type-badge type-40">40</span>
+              Carte 40 — Coordonnées bancaires
+            </div>
+            <div class="field-grid">
+              <div class="field-item">
+                <div class="field-label">Code Carte <span class="field-pos">pos 40-41</span></div>
+                <div class="field-value">40</div>
+              </div>
+              <div class="field-item">
+                <div class="field-label">Code banque <span class="field-pos">pos 42-46</span></div>
+                <div class="field-value">30004</div>
+                <div class="field-decoded">[BNP Paribas]</div>
+              </div>
+              <div class="field-item">
+                <div class="field-label">Code guichet <span class="field-pos">pos 47-51</span></div>
+                <div class="field-value">01234</div>
+              </div>
+              <div class="field-item">
+                <div class="field-label">N° compte <span class="field-pos">pos 52-62</span></div>
+                <div class="field-value">00012345678</div>
+              </div>
+              <div class="field-item">
+                <div class="field-label">Clé RIB <span class="field-pos">pos 63-64</span></div>
+                <div class="field-value">95</div>
+              </div>
+              <div class="field-item">
+                <div class="field-label">Co suite <span class="field-pos">pos 65-66</span></div>
+                <div class="field-value">01</div>
+              </div>
+            </div>
+          </div>
+          <!-- Panel 3: Raw -->
+          <div class="panel-raw">
+            <div class="raw-line">
+              <span class="raw-linenum">47</span>
+              <span class="raw-content">
+                <span class="raw-seg" style="background:#3F3F46;color:#A1A1AA">001</span><span class="raw-seg" style="background:#4a3f46;color:#A1A1AA">012024</span><span class="raw-seg" style="background:#3F3F46;color:#A1A1AA">01</span><span class="raw-seg" style="background:#4a3f46;color:#A1A1AA">01</span><span class="raw-seg" style="background:#3F3F46;color:#A1A1AA">130</span><span class="raw-seg" style="background:#4a3f46;color:#A1A1AA">001</span><span class="raw-seg" style="background:#3F3F46;color:#A1A1AA">075</span><span class="raw-seg" style="background:#7c6fad;color:#fff">2750175001234</span><span class="raw-seg" style="background:#4a7c6f;color:#fff">01</span><span class="raw-seg" style="background:#7c4a6f;color:#fff">40</span><span class="raw-seg" style="background:#6f7c4a;color:#fff">30004</span><span class="raw-seg" style="background:#4a6f7c;color:#fff">01234</span><span class="raw-seg" style="background:#7c6f4a;color:#fff">00012345678</span><span class="raw-seg" style="background:#4a7c5a;color:#fff">95</span><span class="raw-seg" style="background:#5a4a7c;color:#fff">01</span><span class="raw-seg" style="background:#3F3F46;color:#71717A">...</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIRECTION B: Individual-Centric (Explorer) ===== -->
+<div class="mockup-container" id="mockup-b">
+  <div class="mockup-title">Direction B — Explorer : Vue centrée individu</div>
+  <div class="mockup-desc">
+    Inspirée de BambooHR / Salesforce. Liste d'individus à gauche, fiche individu à droite avec onglets par catégorie de cartes. Navigation par individu d'abord, puis par dossier et type de carte via les onglets.
+  </div>
+  <div class="mockup-frame">
+    <div class="window-chrome">
+      <div class="window-dot red"></div><div class="window-dot yellow"></div><div class="window-dot green"></div>
+      <span class="window-title">IRIS — DADS_2024_M12.gest</span>
+    </div>
+    <div class="dir-b">
+      <div class="sidebar-l1">
+        <div class="icon" title="Importer">📥</div>
+        <div class="icon active" title="Explorer">🔍</div>
+        <div class="icon" title="Comparer">⚖️</div>
+        <div style="flex:1"></div>
+        <div class="icon" title="Paramètres">⚙️</div>
+      </div>
+      <div class="main-area">
+        <div class="left-pane">
+          <div class="left-header">Individus — DADS_2024_M12.gest <span style="float:right;color:var(--text-muted)">847</span></div>
+          <div class="left-list">
+            <div class="list-row"><div class="list-avatar">BA</div><div class="list-info"><div class="list-name">Bernard Amélie</div><div class="list-meta">2850275001234 · 1 dossier · 6 cartes</div></div></div>
+            <div class="list-row selected"><div class="list-avatar">DM</div><div class="list-info"><div class="list-name">Dupont Marie</div><div class="list-meta">2750175001234 · 2 dossiers · 12 cartes</div></div></div>
+            <div class="list-row"><div class="list-avatar">DK</div><div class="list-info"><div class="list-name">Durand Karim</div><div class="list-meta">1850275009876 · 1 dossier · 11 cartes</div></div></div>
+            <div class="list-row"><div class="list-avatar">MJ</div><div class="list-info"><div class="list-name">Martin Jean</div><div class="list-meta">1650175005432 · 1 dossier · 9 cartes</div></div></div>
+            <div class="list-row"><div class="list-avatar">PS</div><div class="list-info"><div class="list-name">Petit Sophie</div><div class="list-meta">2800675003456 · 1 dossier · 7 cartes</div></div></div>
+          </div>
+        </div>
+        <div class="right-pane">
+          <div class="right-header">
+            <span class="name">Dupont Marie</span>
+            <span class="insee">INSEE 2750175001234</span>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="toggle-edit" style="font-size:12px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;">✏️ Édition</button>
+              <button class="btn-export" style="font-size:12px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-secondary);cursor:pointer;">📤 Exporter</button>
+            </div>
+          </div>
+          <div class="tabs-bar">
+            <div class="tab-item">Dossier 01</div>
+            <div class="tab-item active">Dossier 02</div>
+          </div>
+          <div class="tabs-bar" style="background:var(--bg-primary)">
+            <div class="tab-item active">Carte 01 — État civil</div>
+            <div class="tab-item">Carte 05 — Indemnités</div>
+            <div class="tab-item">Carte 40 — RIB</div>
+            <div class="tab-item">Carte 22 — Retenues</div>
+          </div>
+          <div class="card-content">
+            <div class="card-section">
+              <div class="card-section-title">Informations d'état civil</div>
+              <div class="card-fields">
+                <div><div class="card-field-label">Date d'effet</div><div class="card-field-value">01/01/2024</div></div>
+                <div><div class="card-field-label">Nom d'usage</div><div class="card-field-value">DUPONT</div></div>
+                <div><div class="card-field-label">Prénom</div><div class="card-field-value">MARIE</div></div>
+                <div><div class="card-field-label">Date de naissance</div><div class="card-field-value">15/01/1975</div></div>
+                <div><div class="card-field-label">Sexe</div><div class="card-field-value">F [Féminin]</div></div>
+                <div><div class="card-field-label">Situation familiale</div><div class="card-field-value">M [Marié(e)]</div></div>
+              </div>
+            </div>
+            <div class="card-section">
+              <div class="card-section-title">Informations administratives</div>
+              <div class="card-fields">
+                <div><div class="card-field-label">Grade</div><div class="card-field-value">ADC [Adjoint administratif]</div></div>
+                <div><div class="card-field-label">Échelon</div><div class="card-field-value">07</div></div>
+                <div><div class="card-field-label">Indice majoré</div><div class="card-field-value">367</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIRECTION C: Compact Data-Dense ===== -->
+<div class="mockup-container" id="mockup-c">
+  <div class="mockup-title">Direction C — Explorer : Vue data-dense compacte</div>
+  <div class="mockup-desc">
+    Inspirée de pgAdmin / TablePlus. Arbre compact à gauche, grille de données à droite avec vue brute en panneau latéral. Maximise la densité d'information pour les profils techniques (Karim).
+  </div>
+  <div class="mockup-frame">
+    <div class="window-chrome">
+      <div class="window-dot red"></div><div class="window-dot yellow"></div><div class="window-dot green"></div>
+      <span class="window-title">IRIS — DADS_2024_M12.gest</span>
+    </div>
+    <div class="dir-c">
+      <div class="sidebar-l1">
+        <div class="icon" title="Importer">📥</div>
+        <div class="icon active" title="Explorer">🔍</div>
+        <div class="icon" title="Comparer">⚖️</div>
+        <div style="flex:1"></div>
+        <div class="icon" title="Paramètres">⚙️</div>
+      </div>
+      <div class="sidebar-l2">
+        <div class="sidebar-l2-header">Fichiers <span style="font-size:10px;color:var(--text-muted)">2</span></div>
+        <input class="sidebar-l2-search" placeholder="Rechercher... (Ctrl+K)" />
+        <div class="tree-item" style="font-weight:500;">📄 DADS_2024_M12</div>
+        <div class="tree-item"><span class="indent"></span>▸ Dupont Marie (01)</div>
+        <div class="tree-item selected"><span class="indent"></span>▾ Dupont Marie (02)</div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span>Carte 01</div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span>Carte 05 ×3</div>
+        <div class="tree-item"><span class="indent"></span><span class="indent"></span>Carte 40</div>
+        <div class="tree-item"><span class="indent"></span>▸ Martin Jean (01)</div>
+        <div class="tree-item"><span class="indent"></span>▸ Petit Sophie (01)</div>
+        <div class="tree-item" style="font-weight:500;">📄 DADS_2024_M11</div>
+      </div>
+      <div class="main-area">
+        <div class="toolbar">
+          <div class="breadcrumb">
+            DADS_2024_M12 <span class="sep">›</span>
+            <span>Dupont Marie</span> <span class="sep">›</span>
+            <span>Dossier 02</span>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
+            <span style="font-size:11px;color:var(--text-muted)">4 cartes</span>
+          </div>
+        </div>
+        <div class="split-h">
+          <div class="panel-table">
+            <table>
+              <tr><th>Type</th><th>Champ 1</th><th>Champ 2</th><th>Champ 3</th><th>Champ 4</th><th>Champ 5</th><th>Champ 6</th></tr>
+              <tr class="selected">
+                <td><span class="type-badge type-01" style="font-size:10px;padding:1px 4px;">01</span></td>
+                <td>01/01/2024</td><td>DUPONT</td><td>MARIE</td><td>15/01/1975</td><td>F</td><td>M</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-05" style="font-size:10px;padding:1px 4px;">05</span></td>
+                <td>0412</td><td>1</td><td>001</td><td>2345.67</td><td>01</td><td>—</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-05" style="font-size:10px;padding:1px 4px;">05</span></td>
+                <td>0301</td><td>2</td><td>001</td><td>567.89</td><td>01</td><td>—</td>
+              </tr>
+              <tr>
+                <td><span class="type-badge type-40" style="font-size:10px;padding:1px 4px;">40</span></td>
+                <td>30004</td><td>01234</td><td>00012345678</td><td>95</td><td>01</td><td>—</td>
+              </tr>
+            </table>
+          </div>
+          <div class="panel-raw-side">
+            <div style="color:#71717A;margin-bottom:8px;">Ligne 45 · Carte 01 · 204 car.</div>
+            <div style="display:flex;flex-wrap:wrap;">
+              <span style="background:#5B5078;padding:1px 2px;color:#D8D0F0;">001</span><span style="background:#507858;padding:1px 2px;color:#D0F0D8;">012024</span><span style="background:#785058;padding:1px 2px;color:#F0D0D8;">01</span><span style="background:#506878;padding:1px 2px;color:#D0E0F0;">01</span><span style="background:#787050;padding:1px 2px;color:#F0E8D0;">130</span><span style="background:#507868;padding:1px 2px;color:#D0F0E8;">001</span><span style="background:#685078;padding:1px 2px;color:#E0D0F0;">075</span><span style="background:#507858;padding:1px 2px;color:#D0F0D8;">2750175001234</span><span style="background:#785058;padding:1px 2px;color:#F0D0D8;">01</span><span style="background:#5B5078;padding:1px 2px;color:#D8D0F0;">01</span><span style="background:#507858;padding:1px 2px;color:#D0F0D8;">01012024</span><span style="background:#785058;padding:1px 2px;color:#F0D0D8;">DUPONT</span><span style="color:#52525B;">...</span>
+            </div>
+            <div style="margin-top:12px;color:#71717A;font-size:9px;">
+              ▲ Cliquer sur un champ dans la grille pour le surligner ici
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIRECTION D: Compare View ===== -->
+<div class="mockup-container" id="mockup-d">
+  <div class="mockup-title">Direction D — Module Comparer</div>
+  <div class="mockup-desc">
+    Inspirée de Beyond Compare / Datafold. Dashboard de comparaison avec métriques en haut, navigation entre différences, et grille de comparaison champ par champ avec double encodage couleur + symbole.
+  </div>
+  <div class="mockup-frame">
+    <div class="window-chrome">
+      <div class="window-dot red"></div><div class="window-dot yellow"></div><div class="window-dot green"></div>
+      <span class="window-title">IRIS — Comparaison</span>
+    </div>
+    <div class="dir-d">
+      <div class="sidebar-l1">
+        <div class="icon" title="Importer">📥</div>
+        <div class="icon" title="Explorer">🔍</div>
+        <div class="icon active" title="Comparer">⚖️</div>
+        <div style="flex:1"></div>
+        <div class="icon" title="Paramètres">⚙️</div>
+      </div>
+      <div class="main-area">
+        <div class="compare-header">
+          <div class="compare-title">DADS_2024_M12.gest vs DADS_2024_M12_new.gest</div>
+          <div class="compare-stats">
+            <div class="stat-item stat-match">✓ 1 823 identiques</div>
+            <div class="stat-item stat-diff">~ 47 modifiées</div>
+            <div class="stat-item stat-orphan">− 3 absentes</div>
+            <div class="stat-item stat-new">+ 2 nouvelles</div>
+          </div>
+        </div>
+        <div class="compare-nav">
+          <button class="nav-btn">◀ Précédent</button>
+          <span class="nav-counter">Différence 12 / 47</span>
+          <button class="nav-btn">Suivant ▶</button>
+          <div class="filter-chips">
+            <div class="chip active">Tous</div>
+            <div class="chip">~ Modifiées</div>
+            <div class="chip">− Absentes</div>
+            <div class="chip">+ Nouvelles</div>
+            <div class="chip">Carte 05</div>
+            <div class="chip">Carte 22</div>
+          </div>
+        </div>
+        <div class="compare-body">
+          <table class="compare-table">
+            <tr><th></th><th>INSEE</th><th>NUDOS</th><th>Individu</th><th>Carte</th><th>Champ</th><th>Référence</th><th>Comparaison</th></tr>
+            <tr class="diff-row">
+              <td class="diff-indicator" style="color:#1D4ED8;">~</td>
+              <td>2750175001234</td><td>01</td><td>Dupont Marie</td>
+              <td><span class="type-badge type-05" style="font-size:10px;">05</span></td>
+              <td>Montant</td>
+              <td class="val-ref val-changed">2 345,67</td>
+              <td class="val-cmp val-changed" style="color:#1D4ED8;">2 345,68</td>
+            </tr>
+            <tr class="diff-row">
+              <td class="diff-indicator" style="color:#1D4ED8;">~</td>
+              <td>2750175001234</td><td>01</td><td>Dupont Marie</td>
+              <td><span class="type-badge type-05" style="font-size:10px;">05</span></td>
+              <td>Nb unités</td>
+              <td class="val-ref val-changed">151.67</td>
+              <td class="val-cmp val-changed" style="color:#1D4ED8;">151.68</td>
+            </tr>
+            <tr class="diff-row">
+              <td class="diff-indicator" style="color:#1D4ED8;">~</td>
+              <td>1650175005432</td><td>01</td><td>Martin Jean</td>
+              <td><span class="type-badge type-22" style="font-size:10px;">22</span></td>
+              <td>Sens</td>
+              <td class="val-ref val-changed">1</td>
+              <td class="val-cmp val-changed" style="color:#1D4ED8;">3</td>
+            </tr>
+            <tr class="removed-row">
+              <td class="diff-indicator" style="color:#DC2626;">−</td>
+              <td>2800675003456</td><td>01</td><td>Petit Sophie</td>
+              <td><span class="type-badge type-40" style="font-size:10px;">40</span></td>
+              <td colspan="2" style="color:#DC2626;">Carte absente en comparaison</td>
+              <td>—</td>
+            </tr>
+            <tr class="added-row">
+              <td class="diff-indicator" style="color:#059669;">+</td>
+              <td>1850275009876</td><td>01</td><td>Durand Karim</td>
+              <td><span class="type-badge type-05" style="font-size:10px;">05</span></td>
+              <td>—</td>
+              <td colspan="2" style="color:#059669;">Carte nouvelle en comparaison</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIRECTION E: Import View ===== -->
+<div class="mockup-container" id="mockup-e">
+  <div class="mockup-title">Direction E — Module Importer</div>
+  <div class="mockup-desc">
+    Zone d'import avec drag & drop, liste des fichiers récemment importés. L'import mène directement au rapport de validation puis à l'explorateur.
+  </div>
+  <div class="mockup-frame">
+    <div class="window-chrome">
+      <div class="window-dot red"></div><div class="window-dot yellow"></div><div class="window-dot green"></div>
+      <span class="window-title">IRIS — Importer</span>
+    </div>
+    <div class="dir-e">
+      <div class="sidebar-l1">
+        <div class="icon active" title="Importer">📥</div>
+        <div class="icon" title="Explorer">🔍</div>
+        <div class="icon" title="Comparer">⚖️</div>
+        <div style="flex:1"></div>
+        <div class="icon" title="Paramètres">⚙️</div>
+      </div>
+      <div class="main-area">
+        <div class="import-content">
+          <div class="drop-zone">
+            <div class="drop-icon">📄</div>
+            <div class="drop-text">Glissez votre fichier GEST ici</div>
+            <div class="drop-hint">ou</div>
+            <button class="drop-btn">Parcourir...</button>
+            <div class="drop-hint">Formats acceptés : .gest, .txt (204 car/ligne)</div>
+          </div>
+          <div class="recent-files">
+            <div class="recent-title">Fichiers récents</div>
+            <div class="recent-item">
+              <div class="recent-icon">📄</div>
+              <div style="flex:1"><div class="recent-name">DADS_2024_M12.gest</div><div class="recent-meta">Importé le 22/03/2026 · 1 987 lignes · ✓ Valide</div></div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-icon">📄</div>
+              <div style="flex:1"><div class="recent-name">DADS_2024_M11.gest</div><div class="recent-meta">Importé le 15/03/2026 · 1 952 lignes · ✓ Valide</div></div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-icon">📄</div>
+              <div style="flex:1"><div class="recent-name">PAIE_MIGRATION_TEST.gest</div><div class="recent-meta">Importé le 10/03/2026 · 3 241 lignes · ⚠ 3 erreurs</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIRECTION F: Validation Report ===== -->
+<div class="mockup-container" id="mockup-f">
+  <div class="mockup-title">Direction F — Rapport de validation après import</div>
+  <div class="mockup-desc">
+    Rapport de validation affiché automatiquement après import. Métriques clés en cartes, liste navigable des erreurs. Clic sur une erreur → navigation vers la ligne dans l'explorateur.
+  </div>
+  <div class="mockup-frame">
+    <div class="window-chrome">
+      <div class="window-dot red"></div><div class="window-dot yellow"></div><div class="window-dot green"></div>
+      <span class="window-title">IRIS — Rapport de validation</span>
+    </div>
+    <div class="dir-f">
+      <div class="sidebar-l1">
+        <div class="icon active" title="Importer">📥</div>
+        <div class="icon" title="Explorer">🔍</div>
+        <div class="icon" title="Comparer">⚖️</div>
+        <div style="flex:1"></div>
+        <div class="icon" title="Paramètres">⚙️</div>
+      </div>
+      <div class="main-area">
+        <div class="report-header">
+          <div>
+            <div class="report-title">Rapport de validation</div>
+            <div class="report-file">DADS_2024_M12.gest</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;">Explorer le fichier →</button>
+          </div>
+        </div>
+        <div class="report-cards">
+          <div class="report-card ok">
+            <div class="report-card-value" style="color:var(--valid);">1 984</div>
+            <div class="report-card-label">Lignes valides</div>
+          </div>
+          <div class="report-card ko">
+            <div class="report-card-value" style="color:var(--invalid);">3</div>
+            <div class="report-card-label">Lignes en erreur</div>
+          </div>
+          <div class="report-card types">
+            <div class="report-card-value">18</div>
+            <div class="report-card-label">Types de cartes</div>
+          </div>
+          <div class="report-card individus">
+            <div class="report-card-value">847</div>
+            <div class="report-card-label">Individus</div>
+          </div>
+        </div>
+        <div class="errors-section">
+          <div class="errors-header">⚠ 3 erreurs détectées</div>
+          <div class="error-row">
+            <span class="error-line">Ligne 234</span>
+            <span class="error-type">LONGUEUR</span>
+            <span class="error-msg">Longueur 203 caractères (attendu : 204)</span>
+          </div>
+          <div class="error-row">
+            <span class="error-line">Ligne 891</span>
+            <span class="error-type">ENCODAGE</span>
+            <span class="error-msg">Caractère non Windows-1252 détecté à la position 156</span>
+          </div>
+          <div class="error-row">
+            <span class="error-line">Ligne 1 456</span>
+            <span class="error-type">LONGUEUR</span>
+            <span class="error-msg">Longueur 205 caractères (attendu : 204)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showMockup(id) {
+  document.querySelectorAll('.mockup-container').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('mockup-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>

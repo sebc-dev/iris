@@ -1,0 +1,89 @@
+# generated: 2026-03-22
+# last_updated: 2026-03-22
+# project: iris_research
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-22
+last_updated: 2026-03-22
+project: iris_research
+
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # Epic 1 : Fondations Projet & Authentification Securisee
+  epic-1: in-progress
+  1-1-initialisation-du-projet-avec-le-starter-officiel-compose: review
+  1-2-pipeline-ci-cd-github-actions: backlog
+  1-3-base-de-donnees-sqlite-chiffree-et-gestion-des-secrets: backlog
+  1-4-inscription-et-creation-de-compte-utilisateur: backlog
+  1-5-connexion-session-securisee-et-deconnexion: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2 : Import & Analyse de Fichiers GEST
+  epic-2: backlog
+  2-1-schemas-des-31-types-de-cartes-gest-en-base-sqlite: backlog
+  2-2-import-de-fichier-gest-via-dialogue-et-decodage-windows-1252: backlog
+  2-3-parsing-positionnel-et-classification-des-cartes: backlog
+  2-4-validation-multi-niveaux-et-rapport-de-validation: backlog
+  2-5-import-par-glisser-deposer: backlog
+  2-6-suppression-dune-bande-gest-importee: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3 : Visualisation Structuree & Navigation
+  epic-3: backlog
+  3-1-layout-applicatif-et-sidebar-multi-niveaux: backlog
+  3-2-arbre-hierarchique-et-fiches-synthetiques: backlog
+  3-3-vue-detaillee-dune-carte-et-vue-brute-segmentee: backlog
+  3-4-navigation-par-type-de-carte-et-filtrage: backlog
+  3-5-palette-de-commandes-et-raccourcis-clavier: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4 : Edition Securisee & Export GEST
+  epic-4: backlog
+  4-1-toggle-mode-edition-et-edition-contrainte-des-champs: backlog
+  4-2-integrite-des-lignes-et-suivi-des-modifications: backlog
+  4-3-validation-complete-avant-export-et-rapport: backlog
+  4-4-export-du-fichier-gest-modifie: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5 : Comparaison Multi-Fichiers & Export Rapport
+  epic-5: backlog
+  5-1-configuration-et-lancement-de-la-comparaison: backlog
+  5-2-moteur-de-comparaison: backlog
+  5-3-dashboard-statistique-et-drill-down: backlog
+  5-4-grille-de-comparaison-detaillee-et-appariement-manuel: backlog
+  5-5-export-du-rapport-de-comparaison-en-excel: backlog
+  epic-5-retrospective: optional
