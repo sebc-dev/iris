@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+
+@theme {
+	/* Palette principale */
+	--color-bg-primary: #0f172a;
+	--color-bg-secondary: #1e293b;
+	--color-bg-tertiary: #334155;
+	--color-text-primary: #f8fafc;
+	--color-text-secondary: #94a3b8;
+	--color-accent: #3b82f6;
+
+	/* Couleurs sémantiques */
+	--color-valid: #22c55e;
+	--color-intermediate: #f59e0b;
+	--color-invalid: #ef4444;
+	--color-info: #3b82f6; /* Même valeur initiale que --color-accent, mais sémantiquement distinct — peut diverger indépendamment */
+
+	/* Couleurs de comparaison */
+	--color-diff-added: #22c55e;
+	--color-diff-removed: #ef4444;
+	--color-diff-modified: #f59e0b;
+
+	/* Typographie */
+	--font-sans: 'Inter', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', monospace;
+
+	/* Échelle typographique (font-size / line-height) */
+	--text-xs: 11px;
+	--text-xs--line-height: 16px;
+	--text-sm: 12px;
+	--text-sm--line-height: 18px;
+	--text-base: 14px;
+	--text-base--line-height: 22px;
+	--text-lg: 16px;
+	--text-lg--line-height: 24px;
+	--text-xl: 20px;
+	--text-xl--line-height: 28px;
+	--text-2xl: 24px;
+	--text-2xl--line-height: 32px;
+	/* Les tailles au-delà de 2xl (3xl, 4xl…) ne sont pas définies ici : elles se rabattent volontairement sur les valeurs par défaut Tailwind */
+
+	/* Espacement */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 20px;
+	--space-6: 24px;
+	--space-7: 28px;
+	--space-8: 32px;
+}
+
+/* Font faces */
+@font-face {
+	font-family: 'Inter';
+	src: url('/fonts/Inter.woff2') format('woff2');
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'JetBrains Mono';
+	src: url('/fonts/JetBrainsMono.woff2') format('woff2');
+	font-display: swap;
+}
