@@ -1,42 +1,41 @@
-# sv
+# IRIS
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Application desktop de recherche généalogique, construite avec SvelteKit + Tauri v2 (Rust).
 
-## Creating a project
+## Prérequis
 
-If you're seeing this, you've probably already done this step. Congrats!
+- [Node.js](https://nodejs.org/) >= 20.19.0
+- [Rust toolchain](https://rustup.rs/) (stable)
+- [Tauri CLI](https://tauri.app/start/prerequisites/) : `npm install -g @tauri-apps/cli`
 
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+## Commandes essentielles
 
 ```sh
-# recreate this project
-npx sv@0.12.8 create --template minimal --types ts --add prettier eslint vitest="usages:unit" tailwindcss="plugins:none" --install npm iris
-```
+# Installer les dépendances frontend
+npm install
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+# Démarrer le frontend seul (SvelteKit)
 npm run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# Démarrer l'application complète (frontend + backend Rust)
+npx tauri dev
+
+# Build de l'application desktop
+npx tauri build
+
+# Linter (Prettier + ESLint)
+npm run lint
+
+# Vérification des types Svelte
+npm run check
+
+# Lancer les tests
+npm run test
 ```
 
-## Building
+## Architecture
 
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- `src/` — Frontend SvelteKit (TypeScript, Tailwind CSS v4)
+- `src-tauri/` — Backend Rust (Tauri v2)
+- Le frontend communique avec le backend exclusivement via des commandes Tauri (IPC)
+- Organisation du code par feature, pas par type de fichier

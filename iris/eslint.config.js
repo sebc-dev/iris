@@ -18,12 +18,16 @@ export default defineConfig(
 	prettier,
 	svelte.configs.prettier,
 	{
-		languageOptions: { globals: { ...globals.browser, ...globals.node } },
+		languageOptions: { globals: { ...globals.browser } },
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
 			'no-undef': 'off'
 		}
+	},
+	{
+		files: ['**/*.server.ts', '**/*.server.js', '**/hooks.server.*', 'svelte.config.*', 'vite.config.*', 'eslint.config.*'],
+		languageOptions: { globals: { ...globals.node } }
 	},
 	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],

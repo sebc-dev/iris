@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "scd-svelte@sebc-dev-marketplace": true,
+    "scd-tauri@sebc-dev-marketplace": true,
+    "scd-review@sebc-dev-marketplace": true
+  }
+}

@@ -13,7 +13,7 @@
 	--color-valid: #22c55e;
 	--color-intermediate: #f59e0b;
 	--color-invalid: #ef4444;
-	--color-info: #3b82f6;
+	--color-info: #3b82f6; /* Même valeur initiale que --color-accent, mais sémantiquement distinct — peut diverger indépendamment */
 
 	/* Couleurs de comparaison */
 	--color-diff-added: #22c55e;
@@ -37,6 +37,7 @@
 	--text-xl--line-height: 28px;
 	--text-2xl: 24px;
 	--text-2xl--line-height: 32px;
+	/* Les tailles au-delà de 2xl (3xl, 4xl…) ne sont pas définies ici : elles se rabattent volontairement sur les valeurs par défaut Tailwind */
 
 	/* Espacement */
 	--space-1: 4px;

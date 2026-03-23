@@ -7,7 +7,7 @@
 - `npm run build` — Build frontend (génère dans `build/`)
 - `npx tauri build` — Build complet de l'app desktop
 - `npm run test` — Lancer les tests Vitest
-- `npm run lint` — Linter (ESLint)
+- `npm run lint` — Linter (Prettier + ESLint)
 - `npm run check` — Vérification types Svelte (svelte-check)
 
 ## Conventions de nommage
@@ -39,6 +39,8 @@
 6. Le frontend ne touche JAMAIS la BDD directement — tout passe par des commandes Tauri
 
 ## Dépendances clés (futures stories)
+
+> Les versions ci-dessous sont indicatives. Vérifier les versions disponibles au moment de l'implémentation.
 
 - tauri-specta v2.0.0-rc : génération types TS depuis Rust
 - rusqlite + bundled-sqlcipher-vendored-openssl : BDD chiffrée
